@@ -1,0 +1,105 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+install.packages("openxlsx")
+library(openxlsx)
+install.packages("dummies")
+install.packages("caret")
+install.packages("InformationValue")
+install.packages("ISLR")
+install.packages("lattice")
+install.packages("lmtest")
+library(psych)
+library(ResourceSelection)
+library(dummies)
+library("scales")
+library(lattice)
+library(caret)
+library(InformationValue)
+library(ISLR)
+library(lmtest)
+getwd()
+setwd("C:/Users/fdelo/Documents/R/Eval_ED")
+getwd()
+
+
+```
+
+```{r}
+datos_AF <- read.xlsx("AF_EvalED.xlsx")
+datos_AM <- read.xlsx("AM_EvalED.xlsx")
+dim(datos_AF)
+names(datos_AF)
+head(datos_AF)
+dim(datos_AM)
+names(datos_AM)
+head(datos_AM)
+```
+
+
+```{r}
+datos_TOT<-merge(datos_AM, datos_AF, by= "Id_familia", all.x = TRUE)
+datos_TOT2<-merge(datos_AM, datos_AF, by= "Id_familia", all.x = FALSE)
+dim(datos_TOT)
+names(datos_TOT)
+head(datos_TOT)
+write.xlsx(datos_TOT, "datos_TOT.xlsx", sheetName = "datos")
+write.xlsx(datos_TOT2, "datos_TOT2.xlsx", sheetName = "datos")
+
+```
+```{r}
+datos_TOT2$Tipo.de.familia <- factor(datos_TOT2$Tipo.de.familia, levels = c("Tipo1", "Tipo2", "Tipo3", "Tipo4", "Tipo5"))
+datos_TOT2$Tipo.de.familia_cod <- as.numeric(datos_TOT2$Tipo.de.familia) - 1
+datos_TOT2$Distrito.x <- factor(datos_TOT2$Distrito.x, levels = c("Magude", "Matutuine", "Moamba", "Namaacha", "Boane"))
+datos_TOT2$Distrito.x_cod <- as.numeric(datos_TOT2$Distrito.x) - 1
+datos_TOT3 <- datos_TOT2[, c("Distrito.x_cod", "Tipo.de.familia_cod", "DC", "FCS_TOT", "Acciones", "TOT_Coping.Stress", "Satis_TOT", "Nivel_esc", "latrina", "copa", "Poor", "agua_siempre", "min_us", "min_afuente", "pobre")]
+datos_TOT3 <- na.omit(datos_TOT3)
+write.xlsx(datos_TOT3, "datos_TOT3.xlsx", sheetName = "datos")
+```
+
+```{r}
+modelo <- glm(DC ~ FCS_TOT + Acciones + TOT_Coping.Stress + Satis_TOT + Nivel_esc + latrina + copa + Poor + agua_siempre + min_us+ min_afuente + pobre , data = datos_TOT2, family = "binomial")
+summary(modelo)
+```
+
+```{r}
+modelo <- glm(DA ~ FCS_TOT + Acciones + TOT_Coping.Stress + Satis_TOT + Nivel_esc + latrina + copa + Poor + agua_siempre + min_us+ min_afuente + pobre , data = datos_TOT2, family = "binomial")
+summary(modelo)
+```
+
+```{r}
+modelo <- glm(BP ~ FCS_TOT + Acciones + TOT_Coping.Stress + Satis_TOT + Nivel_esc + latrina + copa + Poor + agua_siempre + min_us+ min_afuente + pobre , data = datos_TOT2, family = "binomial")
+summary(modelo)
+```
+
+
+```{r}
+modelo_lr <- glm(DC ~ FCS_TOT + Acciones + TOT_Coping.Stress + Satis_TOT + Nivel_esc + latrina + copa + Poor + agua_siempre + min_us+ min_afuente + pobre, data = datos_TOT2,family = binomial("logit"))
+summary(modelo_lr)
+hoslem.test(datos_TOT2$DC, fitted(modelo_lr))
+
+```
+
+```{r}
+boxplot(Nivel_esc ~ DC, data=datos_TOT2, las = 2, ylim=c(0,5.45), horizontal = TRUE)
+boxplot(FCS_TOT ~ DC, data=datos_TOT2, las = 2, horizontal = TRUE)
+boxplot(min_afuente ~ DC, data=datos_TOT2, las = 2, horizontal = TRUE)
+boxplot(Acciones ~ DC, data=datos_TOT2, las = 2, horizontal = TRUE)
+boxplot(latrina ~ DC, data=datos_TOT2, las = 2, horizontal = TRUE)
+```
+
+```{r}
+modelo_lr <- glm(DC ~ Nivel_esc, data = datos_TOT2,family = binomial("logit"))
+summary(modelo_lr)
+```
+
+
+```{r}
+modelo <- glm(DC ~ Tipo.de.familia_cod + FCS_TOT + Acciones + TOT_Coping.Stress + Satis_TOT + Nivel_esc + latrina + copa + Poor + agua_siempre + min_us+ min_afuente + pobre + Distrito.x_cod , data = datos_TOT3, family = "binomial")
+summary(modelo)
+```
